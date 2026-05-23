@@ -400,7 +400,7 @@ def do_test_print():
 def upload():
     files = request.files.getlist("file")
     if not files:
-        return jsonify(ok=False, error="No image file came through — try uploading again."), 400
+        return jsonify(ok=False, error="No image file came through. Try uploading again."), 400
     uploaded = []
     rejected = []
     for f in files:
@@ -500,7 +500,7 @@ _FAVICON_SVG = (
 def update():
     import urllib.request
     if not GITHUB_REPO:
-        return jsonify(ok=False, error="No GitHub repo configured — add github_repo to config.json."), 400
+        return jsonify(ok=False, error="No GitHub repo configured. Add github_repo to config.json."), 400
 
     url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/{GITHUB_FILE}"
     req = urllib.request.Request(url, headers={"User-Agent": "itp73-print-server"})
@@ -508,16 +508,16 @@ def update():
         with urllib.request.urlopen(req, timeout=15) as resp:
             new_content = resp.read()
     except Exception as e:
-        return jsonify(ok=False, error=f"Couldn't reach GitHub — check the internet connection and try again. ({e})"), 500
+        return jsonify(ok=False, error=f"Couldn't reach GitHub. Check the internet connection and try again. ({e})"), 500
 
     server_path = Path(__file__).resolve()
     if server_path.read_bytes() == new_content:
-        return jsonify(ok=True, updated=False, message="Already up to date — you're running the latest version!")
+        return jsonify(ok=True, updated=False, message="Already up to date - you're running the latest version!")
 
     try:
         server_path.write_bytes(new_content)
     except Exception as e:
-        return jsonify(ok=False, error=f"Downloaded the update but couldn't save it — check file permissions. ({e})"), 500
+        return jsonify(ok=False, error=f"Downloaded the update but couldn't save it. Check file permissions. ({e})"), 500
 
     def _restart():
         time.sleep(2)
@@ -577,7 +577,7 @@ def _list_usb_devices():
         import usb.core
         import usb.util
     except ImportError:
-        return None, "pyusb not installed — run: pip install pyusb"
+        return None, "pyusb not installed. Run: pip install pyusb"
     devices = []
     for dev in usb.core.find(find_all=True):
         try:
@@ -640,7 +640,7 @@ def api_set_printer():
         time.sleep(0.5)
         os._exit(0)
     threading.Thread(target=_restart, daemon=True).start()
-    return jsonify(ok=True, message="Printer updated — restarting…")
+    return jsonify(ok=True, message="Printer updated, restarting…")
 
 
 @app.route("/api/logs")
@@ -664,7 +664,7 @@ def _friendly_error(msg: str) -> str:
         )
     if "no such device" in m or "could not find" in m or "not found" in m:
         return (
-            f"Can't find the printer — is it plugged in and switched on? "
+            f"Can't find the printer. Is it plugged in and switched on? "
             f"Give the cable a wiggle and try again. "
             f"(VID={hex(PRINTER_VENDOR_ID)} PID={hex(PRINTER_PRODUCT_ID)})"
         )
@@ -675,7 +675,7 @@ def _friendly_error(msg: str) -> str:
         )
     if "permission" in m or "access denied" in m or "errno 13" in m:
         return (
-            "The system is blocking access to the printer — try re-running the installer. "
+            "The system is blocking access to the printer. Try re-running the installer. "
             "(Permission denied)"
         )
     if "timeout" in m or "timed out" in m:
@@ -710,27 +710,27 @@ UI_HTML = r"""<!doctype html>
 <style>
 /* ── tokens ────────────────────────────────────────────────────────────── */
 :root {
-  --bg:    #f7f6f3;
+  --bg:    #e8e8e8;
   --bg-1:  #ffffff;
-  --bg-2:  #efece7;
-  --rule:  #e5e2db;
-  --rule-strong: #d4cfc7;
+  --bg-2:  #d8d8d8;
+  --rule:  #c0c0c0;
+  --rule-strong: #999999;
 
-  --ink:       #1a1714;
-  --ink-dim:   #726b62;
-  --ink-faint: #a8a19a;
+  --ink:       #111111;
+  --ink-dim:   #444444;
+  --ink-faint: #777777;
 
-  --paper:       #faf7f0;
-  --paper-shade: #ece6d4;
+  --paper:       #ffffff;
+  --paper-shade: #d8d8d8;
 
-  --accent:      #c45208;
-  --accent-glow: rgba(196,82,8,0.14);
-  --accent-dark: #993f05;
-  --accent-soft: #d4620f;
+  --accent:      #d96800;
+  --accent-glow: rgba(217,104,0,0.14);
+  --accent-dark: #b85600;
+  --accent-soft: #e87a10;
 
-  --live:  #dc2626;
-  --armed: #d97706;
-  --ok:    #16a34a;
+  --live:  #cc0000;
+  --armed: #b06000;
+  --ok:    #1a7a1a;
 
   --display: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   --mono:    ui-monospace, "SFMono-Regular", Menlo, Monaco, monospace;
@@ -1040,35 +1040,62 @@ button { font: inherit; color: inherit; }
 
 /* ── secondary actions ─────────────────────────────────────────────────── */
 .secondary-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: 10px;
 }
-.btn-secondary {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--rule-strong);
+/* Change image — prominent secondary CTA */
+.btn-change {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid var(--accent);
   background: var(--bg-1);
-  color: var(--ink);
+  color: var(--accent);
   border-radius: var(--rad-md);
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  transition: border-color 150ms, background 150ms;
+  transition: background 150ms, color 150ms;
 }
-.btn-secondary:hover { border-color: var(--accent); background: var(--bg); }
-.btn-secondary:active { background: var(--bg-2); }
-.btn-secondary kbd {
+.btn-change:hover { background: var(--accent); color: #fff; }
+.btn-change:active { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+.btn-change kbd {
   display: inline-block;
   font-family: var(--mono);
   font-size: 9.5px;
   font-weight: 500;
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid var(--rule-strong);
+  border: 1px solid currentColor;
+  opacity: 0.6;
+}
+/* Test print — tertiary, ghost style */
+.btn-test {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 14px;
+  border: 1px solid var(--rule);
+  background: transparent;
   color: var(--ink-faint);
-  background: var(--bg);
+  border-radius: var(--rad-md);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 150ms, border-color 150ms;
+}
+.btn-test:hover { color: var(--ink-dim); border-color: var(--rule-strong); }
+.btn-test:active { background: var(--bg-2); }
+.btn-test kbd {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  opacity: 0.6;
 }
 
 /* ── update button ─────────────────────────────────────────────────────── */
@@ -1161,12 +1188,12 @@ button { font: inherit; color: inherit; }
 .paper-img[src=""] { display: none; }
 .paper-empty {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
   padding: 44px 12px;
   text-align: center;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-dim);
 }
 .paper-empty[hidden] { display: none; }
 .paper-cut {
@@ -1184,16 +1211,16 @@ button { font: inherit; color: inherit; }
 .upload {
   position: relative;
   padding: 24px 18px;
-  border: 1px dashed var(--rule-strong);
-  background: var(--bg-1);
+  border: 2px dashed var(--rule-strong);
+  background: #fff4e8;
   transition: border-color 200ms, background 200ms, transform 150ms;
   cursor: pointer;
   text-align: center;
 }
-.upload:hover { border-color: var(--accent); background: var(--bg); }
+.upload:hover { border-color: var(--accent); background: #ffe8cc; }
 .upload.is-dragging {
   border-color: var(--accent);
-  background: rgba(196,82,8,0.04);
+  background: #ffd9a8;
   transform: translateY(-2px);
 }
 .upload-inner {
@@ -1323,7 +1350,7 @@ body.open .drawer    { transform: translateY(0); }
 .imgrow:hover { border-color: var(--accent); background: var(--bg); }
 .imgrow.active {
   border-color: var(--accent);
-  background: rgba(196,82,8,0.04);
+  background: var(--accent-glow);
 }
 .imgrow .thumb { width: 48px; height: 48px; }
 .imgrow .name {
@@ -1385,9 +1412,10 @@ body.open .drawer    { transform: translateY(0); }
 .row-remove-btn:hover { background: var(--live); color: #fff; border-color: var(--live); }
 
 /* ── responsive ────────────────────────────────────────────────────────── */
-@media (max-width: 560px) {
+@media (max-width: 768px) {
   .header-readouts .counter { display: none; }
-  .secondary-row { grid-template-columns: 1fr; }
+  kbd { display: none; }
+  .btn-print-key { display: none; }
 }
 @media (min-width: 880px) {
   .preview { grid-column: 2; grid-row: 1 / 3; align-self: start; }
@@ -1396,20 +1424,18 @@ body.open .drawer    { transform: translateY(0); }
 
 /* ── settings gear button ───────────────────────────────────────────────── */
 .settings-gear-btn {
-  width: 38px; height: 38px;
+  width: 36px; height: 36px;
   border-radius: 50%;
-  border: 1px solid var(--rule-strong);
-  background: var(--bg-2);
+  border: none;
+  background: transparent;
   color: var(--ink-dim);
-  font-size: 18px;
-  line-height: 1;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  transition: background 150ms, color 150ms, border-color 150ms;
+  transition: background 150ms, color 150ms;
   padding: 0;
 }
-.settings-gear-btn:hover { background: var(--bg-1); color: var(--ink); border-color: var(--ink-dim); }
+.settings-gear-btn:hover { background: var(--bg-2); color: var(--ink); }
 
 /* ── settings panel ─────────────────────────────────────────────────────── */
 .settings-panel {
@@ -1443,16 +1469,15 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
 .settings-close-btn {
   width: 32px; height: 32px;
   border-radius: 50%;
-  border: 1px solid var(--rule-strong);
-  background: var(--bg-2);
-  color: var(--ink-dim);
-  font-size: 16px;
+  border: none;
+  background: transparent;
+  color: var(--ink-faint);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   padding: 0;
   transition: background 150ms, color 150ms;
 }
-.settings-close-btn:hover { background: var(--rule); color: var(--ink); }
+.settings-close-btn:hover { background: var(--bg-2); color: var(--ink); }
 
 .settings-section {
   border-top: 1px solid var(--rule);
@@ -1492,10 +1517,10 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
 
 .sbtn-accent {
   border-color: var(--accent);
-  background: rgba(196,82,8,0.06);
+  background: rgba(217,104,0,0.06);
   color: var(--accent-dark);
 }
-.sbtn-accent:hover:not(:disabled) { background: rgba(196,82,8,0.12); border-color: var(--accent-dark); }
+.sbtn-accent:hover:not(:disabled) { background: rgba(217,104,0,0.12); border-color: var(--accent-dark); }
 .sbtn-accent .sbtn-sub { color: var(--accent); }
 
 .sbtn-danger {
@@ -1626,7 +1651,12 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
         <div class="counter-num" id="counter">000</div>
         <div class="counter-label">prints</div>
       </div>
-      <button class="settings-gear-btn" id="settingsBtn" aria-label="Open settings">⚙</button>
+      <button class="settings-gear-btn" id="settingsBtn" aria-label="Open settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -1657,11 +1687,11 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
       </button>
 
       <div class="secondary-row">
-        <button class="btn-secondary" id="testBtn">
-          <span>Test print</span><kbd>T</kbd>
+        <button class="btn-change" id="changeBtn">
+          <span>Select image</span><kbd>I</kbd>
         </button>
-        <button class="btn-secondary" id="changeBtn">
-          <span>Change image</span><kbd>I</kbd>
+        <button class="btn-test" id="testBtn">
+          <span>Test print</span><kbd>T</kbd>
         </button>
       </div>
       {% if github_repo %}
@@ -1689,7 +1719,8 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
         <div class="paper" id="paper">
           <img class="paper-img" id="paperImg" alt="" src="" />
           <div class="paper-empty" id="paperEmpty" {% if current %}hidden{% endif %}>
-            No image selected yet
+            <span>No image loaded</span>
+            <span style="font-size:11px;font-weight:400;color:var(--ink-faint)">Drop one below to get started</span>
           </div>
           <div class="paper-cut">✂ &nbsp; cut</div>
         </div>
@@ -1714,7 +1745,7 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
       <span class="panel-meta" id="lastPrintMeta">—</span>
     </header>
     <div class="history-strip" id="historyStrip">
-      <div class="history-empty">No prints yet — go make something!</div>
+      <div class="history-empty">No prints yet. Go make something!</div>
     </div>
   </section>
 
@@ -1732,7 +1763,12 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
 <aside class="settings-panel" id="settingsPanel" aria-label="Settings">
   <div class="settings-panel-head">
     <h2>Settings</h2>
-    <button class="settings-close-btn" id="settingsCloseBtn" aria-label="Close settings">×</button>
+    <button class="settings-close-btn" id="settingsCloseBtn" aria-label="Close settings">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <line x1="1" y1="1" x2="10" y2="10"/>
+        <line x1="10" y1="1" x2="1" y2="10"/>
+      </svg>
+    </button>
   </div>
 
   <!-- Service -->
@@ -1743,7 +1779,7 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
     {% else %}
     <button class="sbtn sbtn-accent" id="restartBtn">
       <span class="sbtn-label">Restart service</span>
-      <span class="sbtn-sub" id="restartSub">Server restarts automatically — page reloads when ready</span>
+      <span class="sbtn-sub" id="restartSub">Server restarts automatically. Page reloads when ready</span>
     </button>
     <button class="sbtn sbtn-danger" id="stopBtn">
       <span class="sbtn-label">Stop service</span>
@@ -1781,7 +1817,7 @@ body.settings-open .drawer-bg { opacity: 1; pointer-events: auto; }
       <button class="settings-refresh-btn" id="logsRefreshBtn">Refresh</button>
     </div>
     {% if mock %}
-    <div class="settings-note">Logs go to stdout in mock mode — check your terminal.</div>
+    <div class="settings-note">Logs go to stdout in mock mode. Check your terminal.</div>
     {% else %}
     <div class="log-box" id="logBox">Loading…</div>
     {% endif %}
@@ -1934,7 +1970,7 @@ function renderHistory(history) {
   if (!history.length) {
     const e = document.createElement("div");
     e.className = "history-empty";
-    e.textContent = "No prints yet — go make something!";
+    e.textContent = "No prints yet. Go make something!";
     els.history.appendChild(e);
     return;
   }
@@ -1972,10 +2008,10 @@ async function doPrint() {
     const r = await fetch("/print", { method: "POST" });
     const j = await r.json();
     if (j.ok) {
-      setStatus(j.mock ? "✓ Mock print — saved to mock_output/" : "✓ Off it goes!", "ok");
+      setStatus(j.mock ? "✓ Mock print saved to mock_output/" : "✓ Off it goes!", "ok");
       await refreshStats();
     } else {
-      setStatus("✗ " + (j.error || "Couldn't print — is the printer on and plugged in?"), "err");
+      setStatus("✗ " + (j.error || "Couldn't print. Is the printer on and plugged in?"), "err");
       setPillState("error", "ERROR");
     }
   } catch (e) {
@@ -2001,10 +2037,10 @@ async function doTestPrint() {
     const r = await fetch("/test-print", { method: "POST" });
     const j = await r.json();
     if (j.ok) {
-      setStatus(j.mock ? "✓ Test page saved to mock_output/" : "✓ Test page done — printer is happy!", "ok");
+      setStatus(j.mock ? "✓ Test page saved to mock_output/" : "✓ Test page done! Printer is happy!", "ok");
       await refreshStats();
     } else {
-      setStatus("✗ " + (j.error || "Couldn't print the test page — check the printer is on and plugged in."), "err");
+      setStatus("✗ " + (j.error || "Couldn't print the test page. Check the printer is on and plugged in."), "err");
       setPillState("error", "ERROR");
     }
   } catch (e) {
@@ -2033,7 +2069,7 @@ async function uploadFiles(fileList) {
     const r = await fetch("/upload", { method: "POST", body: fd });
     const j = await r.json();
     if (j.ok) {
-      setStatus(j.uploaded.length === 1 ? "✓ Image added — ready to print!" : `✓ ${j.uploaded.length} images added`, "ok");
+      setStatus(j.uploaded.length === 1 ? "✓ Image added, ready to print!" : `✓ ${j.uploaded.length} images added`, "ok");
       await refreshCurrent();
     } else {
       setStatus("✗ " + (j.error || "Hmm, that file didn't make it. Make sure it's a PNG, JPG, or similar image."), "err");
@@ -2093,7 +2129,7 @@ async function openDrawer() {
   if (!j.images.length) {
     const e = document.createElement("div");
     e.className = "history-empty";
-    e.textContent = "No images yet — drop one onto the page to get started";
+    e.textContent = "No images yet. Drop one below to get started";
     els.drawerImages.appendChild(e);
     return;
   }
@@ -2133,7 +2169,7 @@ async function selectImage(name) {
   if (j.ok) {
     await refreshCurrent();
     closeDrawer();
-    setStatus("✓ All set — ready to print!", "ok");
+    setStatus("✓ All set, ready to print!", "ok");
     setTimeout(() => {
       if (els.status.classList.contains("ok")) setStatus("Ready.");
     }, 1800);
@@ -2180,7 +2216,7 @@ async function doUpdate() {
       els.updateBtn.disabled = false;
       return;
     }
-    // Update downloaded — server is restarting
+    // Update downloaded - server is restarting
     setStatus("✓ " + j.message, "ok");
     els.updateBtn.querySelector(".update-label").textContent = "Restarting…";
     els.updateBtn.querySelector(".update-sub").textContent = "page will reload automatically";
@@ -2263,7 +2299,7 @@ async function doStop() {
   } catch (_) {}
   if (els.stopConfirm) {
     els.stopConfirm.querySelector(".confirm-msg").textContent =
-      "Server stopped. This page is no longer reachable — close this tab.";
+      "Server stopped. This page is no longer reachable. Close this tab.";
   }
 }
 
