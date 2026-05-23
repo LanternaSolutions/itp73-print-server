@@ -1,0 +1,16 @@
+# Runtime files — contain user data, never commit these
+config.json
+state.json
+.current_image
+
+# User content
+images/
+mock_output/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# macOS
+.DS_Store
